@@ -8,6 +8,7 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// serilog preparation
 var logger = new LoggerConfiguration()
   .ReadFrom.Configuration(builder.Configuration)
   .Enrich.FromLogContext()
@@ -15,8 +16,10 @@ var logger = new LoggerConfiguration()
 
 logger.Debug("Start...");
 
+//read connection string from appsetting.json
 var sqlConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
+//register database context
 builder.Services.AddDbContextFactory<DbEventContext>(options =>
 {
     Host.CreateDefaultBuilder().UseSerilog();
@@ -27,16 +30,21 @@ builder.Services.AddDbContextFactory<DbEventContext>(options =>
     }
     );
 });
-//builder.Logging.ClearProviders();
+
+//register serilog services
 builder.Logging.AddSerilog(logger);
+
+//register repositoty and helper service
 builder.Services.AddScoped<IEventRepository, EventRepository>();
 builder.Services.AddScoped<IEventBookingHelper, EventBookingHelper>();
-// Add services to the container.
 
+// Add services to the container.
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+//register Automapper service
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 var app = builder.Build();
